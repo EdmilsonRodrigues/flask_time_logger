@@ -1,15 +1,16 @@
-from pydantic import BaseModel
+from typing import Annotated
+from pydantic import BaseModel, Field
 from config import SECRET_KEY
 from models.mixins import BaseClass
 from hashlib import sha256
 
 
 class UserRequest(BaseModel):
-    name: str
-    email: str
-    password: str
-    department: str
-    role: str
+    name: Annotated[str, Field(description="The name of the user")]
+    email: Annotated[str, Field(description="The email of the user")]
+    password: Annotated[str, Field(description="The password of the user")]
+    department: Annotated[str, Field(description="The department of the user")]
+    role: Annotated[str, Field(description="The role of the user")]
 
 
 class User(BaseClass, UserRequest):
@@ -31,3 +32,7 @@ class UserResponse(User):
         dump = super().json()
         dump.pop('password')
         return dump
+
+
+if __name__ == "__main__":
+    pass
