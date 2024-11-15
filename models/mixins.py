@@ -1,38 +1,46 @@
+from collections.abc import Generator
 from datetime import datetime
 from enum import Enum
 from types import GenericAlias
-from typing import Annotated, Union
+from typing import Annotated
 from pydantic import BaseModel, Field
 from flask_restx import fields
 
 
 class BaseRequest(BaseModel):
     @classmethod
-    def model(cls):
+    def model(cls) -> tuple[str | dict]:
         data = {}
         model = (cls.__name__, data)
-        for mro_class in cls.__mro__[:-1]:
-            annotations = mro_class.__annotations__
-            for key, annotation in annotations.items():
-                key_type = annotation.__args__[0]
-                metadata = annotation.__metadata__[0]
-                description = metadata.description
-                if isinstance(key_type, Annotated):
-                    key_type = key_type.__args__[0]
-                if isinstance(key_type, GenericAlias):
-                    key_type = key_type.__origin__
-                data[key] = cls.__get_fields_from_key_type(key_type, description)
-                # print(key, annotation.__args__, annotation.__metadata__)
-        print(model)
+        for key, annotation in cls.get_annotations():
+            key_type = annotation.__args__[0]
+            metadata = annotation.__metadata__[0]
+            description = metadata.description
+            if isinstance(key_type, Annotated):
+                key_type = key_type.__args__[0]
+            if isinstance(key_type, GenericAlias):
+                key_type = key_type.__origin__
+            data[key] = cls.__get_fields_from_key_type(key_type, description)
+            # print(key, annotation.__args__, annotation.__metadata__)
         return model
+
+    @classmethod
+    def get_annotations(cls) -> Generator[tuple, None, None]:
+        for mro_class in cls.mro()[:-1]:
+            for key, annotation in mro_class.__annotations__.items():
+                yield key, annotation
 
     @classmethod
     def __get_fields_from_key_type(cls, key_type, description: str):
         required = True
         if str(key_type).startswith("typing.Union[") and str(key_type).endswith("]"):
-            description += "can be " " or ".join([str(arg) for arg in key_type.__args__])
+            description += "can be " " or ".join(
+                [str(arg) for arg in key_type.__args__]
+            )
             return fields.Raw(required=required, description=description)
-        elif str(key_type).startswith("typing.Optional[") and str(key_type).endswith("]"):
+        elif str(key_type).startswith("typing.Optional[") and str(key_type).endswith(
+            "]"
+        ):
             required = False
         elif key_type is list:
             return fields.List(fields.Raw, required=required, description=description)
@@ -56,12 +64,14 @@ class BaseRequest(BaseModel):
             return fields.Nested(key_type.model())
 
 
-
-
 class BaseClass(BaseRequest):
-    id: Annotated[int, Field(description="The id of the object")]
-    created_at: Annotated[datetime, Field(description="The date which the object was created")] = datetime.now()
-    updated_at: Annotated[datetime, Field(description="The date which the object was last updated")] = datetime.now()
+    id: Annotated[int, Field(description="The id of the object", database_field="id INTEGER PRIMARY KEY AUTOINCREMENT")]
+    created_at: Annotated[
+        datetime, Field(description="The date which the object was created", database_field="created_at TEXT NOT NULL")
+    ] = datetime.now()
+    updated_at: Annotated[
+        datetime, Field(description="The date which the object was last updated", database_field="updated_at TEXT NOT NULL")
+    ] = datetime.now()
 
     @classmethod
     def table_name(cls) -> str:
@@ -69,9 +79,10 @@ class BaseClass(BaseRequest):
 
     def save(self):
         self.updated_at = datetime.now()
+
         # Logic to save to database
         return self
-    
+
     def delete(self):
         # Logic to delete from database
         return True
@@ -79,7 +90,7 @@ class BaseClass(BaseRequest):
     def create(self):
         # Logic to create in database
         return self
-    
+
     def json(self):
         dump = self.model_dump()
         for key, value in dump.items():
@@ -93,6 +104,14 @@ class BaseClass(BaseRequest):
                 dump[key] = list(value)
         return dump
 
+    @classmethod
+    def create_table(cls) -> str:
+        command = f"CREATE TABLE IF NOT EXISTS {cls.table_name()} (\n"
+        for _, annotation in cls.get_annotations():
+            metadata = annotation.__metadata__[0]
+            command += f"\t{metadata.json_schema_extra['database_field']},\n"
+        command += ")"
+        return command
 
 if __name__ == "__main__":
-    print(BaseClass.model())
+    print(BaseClass.create_table())
