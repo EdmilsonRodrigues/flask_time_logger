@@ -11,13 +11,13 @@ def get_session_from_header() -> User | None:
     auth_header = request.headers.get("Authorization")
 
     if auth_header is None:
-        return {"message": "Missing Authorization header"}, 401
+        raise ValueError({"message": "Missing Authorization header"}, 401)
 
     # Extract the token (assumes the format is "Bearer <token>")
     token = auth_header.split(" ")[1] if " " in auth_header else None
 
     if auth_header.split(" ")[0] != "Bearer" or token is None:
-        return {"message": "Invalid token format"}, 401
+        raise ValueError({"message": "Invalid token format"}, 401)
 
     return Auth.decode_jwt(token)
 
@@ -31,7 +31,7 @@ def session_dependency(function: Callable, return_session: bool) -> Callable:
             return session
 
         if session is None:
-            return {"message": "Invalid token"}, 401
+            raise ValueError({"message": "Invalid token"}, 401)
 
         if return_session:
             kwargs["session"] = User.get(session["user_id"])
@@ -47,12 +47,12 @@ def admin_dependency(function: Callable, return_session: bool) -> Callable:
         session = get_session_from_header()
 
         if session is None:
-            return {"message": "Invalid token"}, 401
+            raise ValueError({"message": "Invalid token"}, 401)
 
         session: User = User.get(session["user_id"])
 
         if not session.is_admin:
-            return {"message": "Unauthorized"}, 403
+            raise ValueError({"message": "Unauthorized"}, 403)
 
         if return_session:
             kwargs["session"] = session
@@ -72,6 +72,7 @@ def validated_dependency(
 ) -> Callable:
     def decorator(function: Callable) -> Callable:
         try:
+
             @functools.wraps(function)
             def decorated_function(*args, **kwargs):
                 if requires_admin:
@@ -99,6 +100,9 @@ def validated_dependency(
                     decorated_function
                 )
             return decorated_function
+
+        except ValueError as e:
+            namespace.abort(e.args[1], e.args[0])
         except Exception as e:
             print(e)
             raise

@@ -28,7 +28,13 @@ class Database:
         mapping = {schema[index]: fields[index] for index in range(len(fields))}
         return model(**mapping)
 
-    def _gen_insert_query(self, model: type, model_instance, id: int | None = None, exclude_password: bool = False):
+    def _gen_insert_query(
+        self,
+        model: type,
+        model_instance,
+        id: int | None = None,
+        exclude_password: bool = False,
+    ):
         schema = self.get_schema(model, dml=True)
         dump = model_instance.json(exclude_password=exclude_password)
         print(schema)
@@ -42,7 +48,8 @@ class Database:
                 schema.pop(index)
                 continue
             values[index] = dump[key]
-        values.remove("$placeholder")
+        while "$placeholder" in values:
+            values.remove("$placeholder")
         if id is not None:
             set_clause = ", ".join([f"{col} = ?" for col in schema.values()])
             values.append(id)
@@ -54,10 +61,22 @@ class Database:
             tuple(values),
         )
 
-    def list_all(self, model: type):
+    def list_all(
+        self, model: type, user_id: int | None = None, user_ids: int | None = None
+    ):
         with self.get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute(f"SELECT * FROM {model.table_name()}")
+            if user_id is not None:
+                cursor.execute(
+                    f"SELECT * FROM {model.table_name()} WHERE user_id=?", (user_id,)
+                )
+            elif user_ids is not None:
+                cursor.execute(
+                    f"SELECT * FROM {model.table_name()} WHERE EXISTS (SELECT 1 FROM json_each({model.table_name()}.user_ids) WHERE json_each.value = ?)",
+                    (user_ids,),
+                )
+            else:
+                cursor.execute(f"SELECT * FROM {model.table_name()}")
             return [self._gen_object(model, row) for row in cursor.fetchall()]
 
     def get(self, model: type, id: int):
@@ -89,7 +108,10 @@ class Database:
             cursor = conn.cursor()
             id = model_instance.id
             query, values = self._gen_insert_query(
-                type(model_instance), model_instance, id, exclude_password=exclude_password
+                type(model_instance),
+                model_instance,
+                id,
+                exclude_password=exclude_password,
             )
             cursor.execute(query, values)
             conn.commit()

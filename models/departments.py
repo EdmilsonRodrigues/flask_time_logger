@@ -18,18 +18,18 @@ class DepartmentRequest(BaseRequest):
             database_field="description TEXT NOT NULL",
         ),
     ]
-    users: Annotated[
+    user_ids: Annotated[
         list[int],
         Field(
             description="List of user IDs in the department",
-            database_field="users INTEGER[]",
+            database_field="user_ids INTEGER[]",
         ),
     ] = []
-    admins: Annotated[
+    admin_ids: Annotated[
         list[int],
         Field(
             description="List of admin IDs in the department",
-            database_field="admins INTEGER[]",
+            database_field="admin_ids INTEGER[]",
         ),
     ] = []
 

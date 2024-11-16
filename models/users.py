@@ -49,7 +49,7 @@ class User(BaseClass, UserRequest):
         else:
             dump.pop("password", None)
         return dump
-    
+
     def save(self) -> BaseClass:
         return super().save(exclude_password=True)
 

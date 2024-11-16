@@ -46,6 +46,13 @@ class ProjectRequest(BaseRequest):
             database_field="spent_hours INTEGER NOT NULL",
         ),
     ] = 0
+    user_ids: Annotated[
+        list[int],
+        Field(
+            description="List of user IDs in the project",
+            database_field="user_ids INTEGER[]",
+        ),
+    ] = []
 
 
 class Project(BaseClass, ProjectRequest):

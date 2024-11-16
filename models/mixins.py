@@ -94,11 +94,11 @@ class BaseClass(BaseRequest):
         return cls.__name__.lower() + "s"
 
     @classmethod
-    def list_all(cls) -> list:
-        return db.list_all(cls)
+    def list_all(cls, user_id: int | None = None, user_ids: int | None = None) -> list:
+        return db.list_all(cls, user_id=user_id, user_ids=user_ids)
 
     @classmethod
-    def get(cls, id) -> "BaseClass":
+    def get(cls, id: int) -> "BaseClass":
         return db.get(cls, id)
 
     @classmethod
@@ -117,7 +117,7 @@ class BaseClass(BaseRequest):
         self = cls(**request.model_dump(), id=-100)
         return db.create(self)
 
-    def json(self) -> dict:
+    def json(self, **kwargs) -> dict:
         dump = self.model_dump()
         for key, value in dump.items():
             if isinstance(value, datetime):

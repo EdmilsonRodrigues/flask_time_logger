@@ -32,7 +32,7 @@ class MeResource(Resource):
     @validated_dependency(
         namespace=users_ns, response_model=user_model, return_session=True
     )
-    def get(self, session):
+    def get(self, session: User):
         return UserResponse(**session.model_dump()).json(), 200
 
     @validated_dependency(
@@ -41,7 +41,7 @@ class MeResource(Resource):
         response_model=user_model,
         return_session=True,
     )
-    def put(self, session):
+    def put(self, session: User):
         user = session.json()
         updated_user = UserRequest(**request.json)
         user.update(updated_user)
@@ -50,6 +50,6 @@ class MeResource(Resource):
         return UserResponse(**user.model_dump()).json(), 200
 
     @validated_dependency(namespace=users_ns, return_session=True)
-    def delete(self, session):
+    def delete(self, session: User):
         session.delete()
         return {"message": "User deleted"}, 200
