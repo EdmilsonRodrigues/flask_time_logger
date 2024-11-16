@@ -11,7 +11,7 @@ projects_ns = Namespace("projects", description="Project related operations")
 project_create_model = projects_ns.model(*ProjectRequest.model())
 project_model = projects_ns.model(*Project.model())
 project_list_model = projects_ns.model(
-    "ProjectsList", {"projects": fields.List(fields.Nested(project_model))}
+    "ProjectsList", {"results": fields.List(fields.Nested(project_model))}
 )
 
 

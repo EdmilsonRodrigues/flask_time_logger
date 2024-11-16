@@ -13,6 +13,13 @@ timelog_model = timelogs_ns.model(*TimeLog.model())
 timelog_list_model = timelogs_ns.model(
     "TimeLogsList", {"results": fields.List(fields.Nested(timelog_model))}
 )
+timelog_action_model = timelogs_ns.model(
+    "TimeLogAction",
+    {
+        "action": fields.String(description="Action to perform. E.g. start, stop"),
+        "project_id": fields.Integer(description="Project ID", required=False),
+    },
+)
 
 
 @timelogs_ns.route("/")
@@ -34,6 +41,24 @@ class ListTimeLogs(Resource):
     def get(self, session: User):
         timelogs = TimeLog.list_all(user_id=session.id)
         return {"results": [timelog.json() for timelog in timelogs]}, 200
+
+
+@timelogs_ns.route("/actions")
+class TimeLogActions(Resource):
+    @validated_dependency(
+        namespace=timelogs_ns, return_session=True, request_model=timelog_action_model
+    )
+    def post(self, session: User):
+        action = request.json["action"]
+        match action:
+            case "start":
+                project_id = request.json.get("project_id")
+                TimeLog.start(session.id, project_id)
+            case "stop":
+                TimeLog.stop(session.id)
+            case _:
+                timelogs_ns.abort(400, "Invalid action")
+        return {"message": f"Action {action} performed"}, 200
 
 
 @timelogs_ns.route("/<int:id>")

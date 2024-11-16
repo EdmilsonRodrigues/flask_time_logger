@@ -105,6 +105,10 @@ class BaseClass(BaseRequest):
     def get_by_field(cls, field: str, value: Any) -> "BaseClass":
         return db.get_by_field(cls, field, value)
 
+    @classmethod
+    def get_by_fields(cls, fields: dict) -> "BaseClass":
+        return db.get_by_fields(cls, fields)
+
     def save(self, exclude_password: bool = False) -> "BaseClass":
         self.updated_at = datetime.now()
         return db.update(self, exclude_password=exclude_password)

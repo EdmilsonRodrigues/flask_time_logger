@@ -27,7 +27,7 @@ auth_response = auth_ns.model(
             required=True,
             description="The type of token, e.g., bearer",
             default="bearer",
-        ),
+           ),
     },
 )
 

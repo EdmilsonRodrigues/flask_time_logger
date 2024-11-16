@@ -112,7 +112,7 @@ class ListProjects(Resource):
     @validated_dependency(
         namespace=admin_ns,
         request_model=project_create_model,
-        response_model=project_list_model,
+        response_model=project_model,
         requires_admin=True,
     )
     def post(self):
@@ -120,11 +120,11 @@ class ListProjects(Resource):
         return project.json(), 201
 
     @validated_dependency(
-        namespace=admin_ns, response_model=project_model, requires_admin=True
+        namespace=admin_ns, response_model=project_list_model, requires_admin=True
     )
     def get(self):
         projects = Project.list_all()
-        return {"projects": [project.json() for project in projects]}, 200
+        return {"results": [project.json() for project in projects]}, 200
 
 
 @admin_ns.route("/<int:id>")
@@ -162,7 +162,7 @@ class ListDepartments(Resource):
     @validated_dependency(
         namespace=admin_ns,
         request_model=department_create_model,
-        response_model=department_list_model,
+        response_model=department_model,
         requires_admin=True,
     )
     def post(self):
@@ -170,11 +170,11 @@ class ListDepartments(Resource):
         return department.json(), 201
 
     @validated_dependency(
-        namespace=admin_ns, response_model=department_model, requires_admin=True
+        namespace=admin_ns, response_model=department_list_model, requires_admin=True
     )
     def get(self):
         departments = Department.list_all()
-        return {"departments": [department.json() for department in departments]}, 200
+        return {"results": [department.json() for department in departments]}, 200
 
 
 @admin_ns.route("/<int:id>")

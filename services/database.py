@@ -47,7 +47,7 @@ class Database:
             if exclude_password and key == "password":
                 schema.pop(index)
                 continue
-            values[index] = dump[key]
+            values[index] = dump.get(key, None)  # Use get to handle missing keys
         while "$placeholder" in values:
             values.remove("$placeholder")
         if id is not None:
@@ -88,9 +88,27 @@ class Database:
     def get_by_field(self, model: type, field: str, value: Any):
         with self.get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                f"SELECT * FROM {model.table_name()} WHERE {field}=?", (value,)
-            )
+            if value is None:
+                query = f"SELECT * FROM {model.table_name()} WHERE {field} IS NULL"
+                cursor.execute(query)
+            else:
+                query = f"SELECT * FROM {model.table_name()} WHERE {field}=?"
+                cursor.execute(query, (value,))
+            return self._gen_object(model, cursor.fetchone())
+
+    def get_by_fields(self, model: type, fields: dict):
+        with self.get_db() as conn:
+            cursor = conn.cursor()
+            query = f"SELECT * FROM {model.table_name()} WHERE "
+            values = []
+            for key, value in fields.items():
+                if value is None:
+                    query += f"{key} IS NULL AND "
+                else:
+                    query += f"{key} = ? AND "
+                    values.append(value)
+            query = query[:-5]  # Remove the trailing ' AND '
+            cursor.execute(query, tuple(values))
             return self._gen_object(model, cursor.fetchone())
 
     def create(self, model_instance):

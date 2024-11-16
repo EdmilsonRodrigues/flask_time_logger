@@ -11,7 +11,7 @@ model = departments_ns.model(*DepartmentRequest.model())
 department_create_model = departments_ns.model(*DepartmentRequest.model())
 department_model = departments_ns.model(*Department.model())
 department_list_model = departments_ns.model(
-    "DepartmentsList", {"departments": fields.List(fields.Nested(department_model))}
+    "DepartmentsList", {"results": fields.List(fields.Nested(department_model))}
 )
 
 
@@ -20,7 +20,7 @@ class ListDepartments(Resource):
     @validated_dependency(
         namespace=departments_ns,
         request_model=department_create_model,
-        response_model=department_list_model,
+        response_model=department_model,
         return_session=True,
     )
     def post(self, session: User):
@@ -29,11 +29,12 @@ class ListDepartments(Resource):
         return department.json(), 201
 
     @validated_dependency(
-        namespace=departments_ns, response_model=department_model, return_session=True
+        namespace=departments_ns, response_model=department_list_model, return_session=True
     )
     def get(self, session: User):
         departments = Department.list_all(user_ids=session.id)
-        return {"departments": [department.json() for department in departments]}, 200
+        print(departments)
+        return {"results": [department.json() for department in departments]}, 200
 
 
 @departments_ns.route("/<int:id>")

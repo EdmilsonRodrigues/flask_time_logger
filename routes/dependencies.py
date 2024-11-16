@@ -72,18 +72,24 @@ def validated_dependency(
 ) -> Callable:
     def decorator(function: Callable) -> Callable:
         try:
-
             @functools.wraps(function)
             def decorated_function(*args, **kwargs):
-                if requires_admin:
-                    return admin_dependency(function, return_session=return_session)(
-                        *args, **kwargs
-                    )
-                if requires_authentication:
-                    return session_dependency(function, return_session=return_session)(
-                        *args, **kwargs
-                    )
-                return function(*args, **kwargs)
+                try:
+                    if requires_admin:
+                        return admin_dependency(function, return_session=return_session)(
+                            *args, **kwargs
+                        )
+                    if requires_authentication:
+                        return session_dependency(function, return_session=return_session)(
+                            *args, **kwargs
+                        )
+                    return function(*args, **kwargs)
+                except ValueError as e:
+                    namespace.abort(e.args[1], e.args[0])
+
+                except Exception as e:
+                    print(e)
+                    raise
 
             if requires_authentication:
                 decorated_function = namespace.doc(security="bearerAuth")(
@@ -103,6 +109,7 @@ def validated_dependency(
 
         except ValueError as e:
             namespace.abort(e.args[1], e.args[0])
+
         except Exception as e:
             print(e)
             raise
