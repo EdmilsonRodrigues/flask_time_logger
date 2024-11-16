@@ -7,13 +7,20 @@ class Database:
     def __init__(self, get_db: Callable):
         self.get_db = get_db
 
-    def get_schema(self, model: type):
+    def get_schema(self, model: type, dml: bool = False):
         with self.get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(f"PRAGMA table_info({model.table_name()})")
             shcema = {}
             for row in cursor.fetchall():
-                shcema[row[0]] = row[1]
+                if dml:
+                    if row[1] == "id":
+                        continue
+                    shcema[row[0] - 1] = row[
+                        1
+                    ]  # removed the index since it's not needed to create nor update
+                else:
+                    shcema[row[0]] = row[1]
             return shcema
 
     def _gen_object(self, model: type, fields: tuple):
@@ -21,14 +28,21 @@ class Database:
         mapping = {schema[index]: fields[index] for index in range(len(fields))}
         return model(**mapping)
 
-    def _gen_insert_query(self, model: type, model_instance, id: int | None = None):
-        schema = self.get_schema(model)
-        dump = model_instance.json()
+    def _gen_insert_query(self, model: type, model_instance, id: int | None = None, exclude_password: bool = False):
+        schema = self.get_schema(model, dml=True)
+        dump = model_instance.json(exclude_password=exclude_password)
+        print(schema)
+        print(dump)
         columns = ", ".join(schema.values())
         placeholders = ", ".join("?" * len(schema))
-        values = list(range(len(schema)))
-        for index, key in schema.items():
+        values = list("$placeholder" for _ in range(len(schema)))
+        items = schema.items()
+        for index, key in tuple(items):
+            if exclude_password and key == "password":
+                schema.pop(index)
+                continue
             values[index] = dump[key]
+        values.remove("$placeholder")
         if id is not None:
             set_clause = ", ".join([f"{col} = ?" for col in schema.values()])
             values.append(id)
@@ -70,12 +84,12 @@ class Database:
             conn.commit()
             return model_instance
 
-    def update(self, model_instance):
+    def update(self, model_instance, exclude_password: bool = False):
         with self.get_db() as conn:
             cursor = conn.cursor()
             id = model_instance.id
             query, values = self._gen_insert_query(
-                type(model_instance), model_instance, id
+                type(model_instance), model_instance, id, exclude_password=exclude_password
             )
             cursor.execute(query, values)
             conn.commit()

@@ -1,14 +1,14 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from dependencies import validated_dependency
+from routes.dependencies import validated_dependency
 from models.time_logs import TimeLog, TimeLogRequest
 
 
 timelogs_ns = Namespace("timelogs", description="TimeLog related operations")
 
 
-timelog_create_model = timelogs_ns.model(TimeLogRequest.model())
-timelog_model = timelogs_ns.model(TimeLog.model())
+timelog_create_model = timelogs_ns.model(*TimeLogRequest.model())
+timelog_model = timelogs_ns.model(*TimeLog.model())
 timelog_list_model = timelogs_ns.model(
     "TimeLogsList", {"timelogs": fields.List(fields.Nested(timelog_model))}
 )

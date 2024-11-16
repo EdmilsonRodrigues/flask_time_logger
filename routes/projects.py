@@ -1,14 +1,14 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from dependencies import validated_dependency
+from routes.dependencies import validated_dependency
 from models.projects import Project, ProjectRequest
 
 
 projects_ns = Namespace("projects", description="Project related operations")
 
 
-project_create_model = projects_ns.model(ProjectRequest.model())
-project_model = projects_ns.model(Project.model())
+project_create_model = projects_ns.model(*ProjectRequest.model())
+project_model = projects_ns.model(*Project.model())
 project_list_model = projects_ns.model(
     "ProjectsList", {"projects": fields.List(fields.Nested(project_model))}
 )

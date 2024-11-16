@@ -1,21 +1,21 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from dependencies import validated_dependency
-from models.users import User, UserRequest
+from routes.dependencies import validated_dependency
+from models.users import User, UserRequest, UserResponse
 
 
 users_ns = Namespace("users", description="User related operations")
 
 
-user_create_model = users_ns.model(UserRequest.model())
-user_model = users_ns.model(User.model())
+user_create_model = users_ns.model(*UserRequest.model())
+user_model = users_ns.model(*UserResponse.model())
 user_list_model = users_ns.model(
-    "UsersList", {"users": fields.List(fields.Nested(user_model))}
+    "UsersList", {"results": fields.List(fields.Nested(user_model))}
 )
 
 
 @users_ns.route("/")
-class ListUsers(Resource):
+class CreateUsers(Resource):
     @validated_dependency(
         namespace=users_ns,
         request_model=user_create_model,
@@ -26,32 +26,30 @@ class ListUsers(Resource):
         user = User.create(UserRequest(**request.json))
         return user.json(), 201
 
-    @validated_dependency(namespace=users_ns, response_model=user_model)
-    def get(self):
-        users = User.list_all()
-        return {"users": [user.json() for user in users]}, 200
 
-
-@users_ns.route("/<int:id>")
-class UserResource(Resource):
-    @validated_dependency(namespace=users_ns, response_model=user_model)
-    def get(self, id):
-        user = User.get(id)
-        return user.json(), 200
+@users_ns.route("/me")
+class MeResource(Resource):
+    @validated_dependency(
+        namespace=users_ns, response_model=user_model, return_session=True
+    )
+    def get(self, session):
+        return UserResponse(**session.model_dump()).json(), 200
 
     @validated_dependency(
-        namespace=users_ns, request_model=user_create_model, response_model=user_model
+        namespace=users_ns,
+        request_model=user_create_model,
+        response_model=user_model,
+        return_session=True,
     )
-    def put(self, id):
-        user = User.get(id).json()
-        updated_user = UserRequest(**request.json).model_dump()
+    def put(self, session):
+        user = session.json()
+        updated_user = UserRequest(**request.json)
         user.update(updated_user)
         user = User(**user)
         user = user.save()
-        return user.json(), 200
+        return UserResponse(**user.model_dump()).json(), 200
 
-    @validated_dependency(namespace=users_ns)
-    def delete(self, id):
-        user = User.get(id)
-        user.delete()
+    @validated_dependency(namespace=users_ns, return_session=True)
+    def delete(self, session):
+        session.delete()
         return {"message": "User deleted"}, 200

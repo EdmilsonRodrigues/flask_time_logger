@@ -1,14 +1,14 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from dependencies import validated_dependency
+from routes.dependencies import validated_dependency
 from models.departments import Department, DepartmentRequest
 
 
 departments_ns = Namespace("departments", description="Department related operations")
 
-
-department_create_model = departments_ns.model(DepartmentRequest.model())
-department_model = departments_ns.model(Department.model())
+model = departments_ns.model(*DepartmentRequest.model())
+department_create_model = departments_ns.model(*DepartmentRequest.model())
+department_model = departments_ns.model(*Department.model())
 department_list_model = departments_ns.model(
     "DepartmentsList", {"departments": fields.List(fields.Nested(department_model))}
 )

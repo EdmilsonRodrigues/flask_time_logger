@@ -42,8 +42,9 @@ class BaseRequest(BaseModel):
         elif str(key_type).startswith("typing.Optional[") and str(key_type).endswith(
             "]"
         ):
+            key_type = key_type.__args__[0]
             required = False
-        elif key_type is list:
+        if key_type is list:
             return fields.List(fields.Raw, required=required, description=description)
         elif key_type is dict:
             return fields.Raw(required=required, description=description)
@@ -104,9 +105,9 @@ class BaseClass(BaseRequest):
     def get_by_field(cls, field: str, value: Any) -> "BaseClass":
         return db.get_by_field(cls, field, value)
 
-    def save(self) -> "BaseClass":
+    def save(self, exclude_password: bool = False) -> "BaseClass":
         self.updated_at = datetime.now()
-        return db.update(self)
+        return db.update(self, exclude_password=exclude_password)
 
     def delete(self) -> bool:
         return db.delete(self)
