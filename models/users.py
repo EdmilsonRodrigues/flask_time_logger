@@ -1,16 +1,39 @@
 from typing import Annotated
-from pydantic import BaseModel, Field
+from pydantic import Field
 from config import SECRET_KEY
-from models.mixins import BaseClass
+from models.mixins import BaseClass, BaseRequest
 from hashlib import sha256
 
 
-class UserRequest(BaseModel):
-    name: Annotated[str, Field(description="The name of the user", database_field="name TEXT NOT NULL")]
-    email: Annotated[str, Field(description="The email of the user", database_field="email TEXT NOT NULL")]
-    password: Annotated[str, Field(description="The password of the user", database_field="password TEXT NOT NULL")]
-    department: Annotated[str, Field(description="The department of the user", database_field="department TEXT NOT NULL")]
-    role: Annotated[str, Field(description="The role of the user", database_field="role TEXT NOT NULL")]
+class UserRequest(BaseRequest):
+    name: Annotated[
+        str,
+        Field(description="The name of the user", database_field="name TEXT NOT NULL"),
+    ]
+    email: Annotated[
+        str,
+        Field(
+            description="The email of the user", database_field="email TEXT NOT NULL"
+        ),
+    ]
+    password: Annotated[
+        str,
+        Field(
+            description="The password of the user",
+            database_field="password TEXT NOT NULL",
+        ),
+    ]
+    department: Annotated[
+        str,
+        Field(
+            description="The department of the user",
+            database_field="department TEXT NOT NULL",
+        ),
+    ]
+    role: Annotated[
+        str,
+        Field(description="The role of the user", database_field="role TEXT NOT NULL"),
+    ]
 
 
 class User(BaseClass, UserRequest):

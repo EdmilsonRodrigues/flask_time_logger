@@ -5,7 +5,7 @@ from types import GenericAlias
 from typing import Annotated
 from pydantic import BaseModel, Field
 from flask_restx import fields
-
+from session import db
 
 class BaseRequest(BaseModel):
     @classmethod
@@ -65,31 +65,49 @@ class BaseRequest(BaseModel):
 
 
 class BaseClass(BaseRequest):
-    id: Annotated[int, Field(description="The id of the object", database_field="id INTEGER PRIMARY KEY AUTOINCREMENT")]
+    id: Annotated[
+        int,
+        Field(
+            description="The id of the object",
+            database_field="id INTEGER PRIMARY KEY AUTOINCREMENT",
+        ),
+    ]
     created_at: Annotated[
-        datetime, Field(description="The date which the object was created", database_field="created_at TEXT NOT NULL")
+        datetime,
+        Field(
+            description="The date which the object was created",
+            database_field="created_at TEXT NOT NULL",
+        ),
     ] = datetime.now()
     updated_at: Annotated[
-        datetime, Field(description="The date which the object was last updated", database_field="updated_at TEXT NOT NULL")
+        datetime,
+        Field(
+            description="The date which the object was last updated",
+            database_field="updated_at TEXT NOT NULL",
+        ),
     ] = datetime.now()
 
     @classmethod
     def table_name(cls) -> str:
         return cls.__name__.lower() + "s"
 
+    @classmethod
+    def list_all(cls):
+        return db.list_all(cls)
+
+    @classmethod
+    def get(cls, id):
+        return db.get(cls, id)
+
     def save(self):
         self.updated_at = datetime.now()
-
-        # Logic to save to database
-        return self
+        return db.update(self)
 
     def delete(self):
-        # Logic to delete from database
-        return True
+        return db.delete(self)
 
     def create(self):
-        # Logic to create in database
-        return self
+        return db.create(self)
 
     def json(self):
         dump = self.model_dump()
@@ -113,6 +131,7 @@ class BaseClass(BaseRequest):
         command = command[:-2] + "\n"
         command += ")"
         return command
+
 
 if __name__ == "__main__":
     print(BaseClass.create_table())

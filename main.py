@@ -18,6 +18,7 @@ api.add_namespace(test_ns)
 
 models = (User, TimeLog, Department, Project)
 
+
 def init_db():
     with get_db() as db:
         for model in models:
