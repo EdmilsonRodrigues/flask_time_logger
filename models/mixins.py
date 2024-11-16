@@ -23,7 +23,6 @@ class BaseRequest(BaseModel):
                 key_type = key_type.__origin__
             data[key] = cls.__get_fields_from_key_type(key_type, description)
             # print(key, annotation.__args__, annotation.__metadata__)
-        print(model)
         return model
 
     @classmethod
@@ -35,7 +34,6 @@ class BaseRequest(BaseModel):
     @classmethod
     def __get_fields_from_key_type(cls, key_type, description: str) -> fields.Raw:
         required = True
-        print(key_type)
         if str(key_type).startswith("typing.Union[") and str(key_type).endswith("]"):
             description += "can be " " or ".join(
                 [str(arg) for arg in key_type.__args__]
