@@ -29,7 +29,9 @@ class ListDepartments(Resource):
         return department.json(), 201
 
     @validated_dependency(
-        namespace=departments_ns, response_model=department_list_model, return_session=True
+        namespace=departments_ns,
+        response_model=department_list_model,
+        return_session=True,
     )
     def get(self, session: User):
         departments = Department.list_all(user_ids=session.id)
