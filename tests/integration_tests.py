@@ -1,3 +1,9 @@
+import requests
+from app import app
+
+app.run(debug=True)
+
+
 def test_create_user():
     assert False
 

@@ -11,6 +11,7 @@ DESCRIPTION = "An API for tracking time logs of home work projects"
 TITLE = "Time Tracker API"
 
 DEBUG = os.getenv("DEBUG", "True").capitalize() == "True"
+DB = os.getenv("DB", "db.sqlite3")
 BASE_API_URL = os.getenv("BASE_API_URL", "http://localhost:5000")
 SECRET_KEY = os.getenv("SECRET_KEY", "This is my secre key")
 
