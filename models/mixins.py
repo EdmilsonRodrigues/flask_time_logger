@@ -110,6 +110,7 @@ class BaseClass(BaseRequest):
         for _, annotation in cls.get_annotations():
             metadata = annotation.__metadata__[0]
             command += f"\t{metadata.json_schema_extra['database_field']},\n"
+        command = command[:-2] + "\n"
         command += ")"
         return command
 
