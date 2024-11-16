@@ -36,7 +36,7 @@ def validated_dependency(
     namespace: Namespace,
     request_model: Model | OrderedModel,
     response_model: Model | OrderedModel,
-    requires_authentication: bool = False,
+    requires_authentication: bool = True,
 ) -> Callable:
     @functools.wraps(function)
     @namespace.expect(request_model, validate=True)

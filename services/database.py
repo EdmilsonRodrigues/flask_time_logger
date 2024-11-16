@@ -63,8 +63,10 @@ class Database:
     def create(self, model_instance):
         with self.get_db() as conn:
             cursor = conn.cursor()
+            del model_instance.id
             query, values = self._gen_insert_query(type(model_instance), model_instance)
             cursor.execute(query, values)
+            model_instance.id = cursor.lastrowid
             conn.commit()
             return model_instance
 

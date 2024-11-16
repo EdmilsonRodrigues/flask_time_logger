@@ -97,21 +97,23 @@ class BaseClass(BaseRequest):
         return db.list_all(cls)
 
     @classmethod
-    def get(cls, id):
+    def get(cls, id) -> "BaseClass":
         return db.get(cls, id)
 
     @classmethod
-    def get_by_field(cls, field: str, value: Any):
+    def get_by_field(cls, field: str, value: Any) -> "BaseClass":
         return db.get_by_field(cls, field, value)
 
-    def save(self):
+    def save(self) -> "BaseClass":
         self.updated_at = datetime.now()
         return db.update(self)
 
     def delete(self) -> bool:
         return db.delete(self)
 
-    def create(self):
+    @classmethod
+    def create(cls, request: BaseRequest) -> "BaseClass":
+        self = cls(**request.model_dump(), id=-100)
         return db.create(self)
 
     def json(self) -> dict:
