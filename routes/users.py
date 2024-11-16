@@ -9,9 +9,7 @@ users_ns = Namespace("users", description="User related operations")
 
 user_create_model = users_ns.model(UserRequest.model())
 
-user_model = users_ns.model(
-    User.model()
-)
+user_model = users_ns.model(User.model())
 
 
 @users_ns.route("/")

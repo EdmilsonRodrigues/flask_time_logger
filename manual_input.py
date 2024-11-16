@@ -3,6 +3,7 @@ from config import BASE_API_URL
 from models.users import User
 from session import db
 
+
 def main():
     url = BASE_API_URL
     path = "/test-api"
@@ -12,8 +13,20 @@ def main():
 
 
 def test_get_schemas():
-    print(db._gen_insert_query(User, User(id=1, name="name", email="email", password="password", department="department", role="role"), id=1))   
-
+    print(
+        db._gen_insert_query(
+            User,
+            User(
+                id=1,
+                name="name",
+                email="email",
+                password="password",
+                department="department",
+                role="role",
+            ),
+            id=1,
+        )
+    )
 
 
 if __name__ == "__main__":

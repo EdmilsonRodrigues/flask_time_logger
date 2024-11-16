@@ -2,10 +2,11 @@ from collections.abc import Generator
 from datetime import datetime
 from enum import Enum
 from types import GenericAlias
-from typing import Annotated
+from typing import Annotated, Any
 from pydantic import BaseModel, Field
 from flask_restx import fields
 from session import db
+
 
 class BaseRequest(BaseModel):
     @classmethod
@@ -31,7 +32,7 @@ class BaseRequest(BaseModel):
                 yield key, annotation
 
     @classmethod
-    def __get_fields_from_key_type(cls, key_type, description: str):
+    def __get_fields_from_key_type(cls, key_type, description: str) -> fields.Raw:
         required = True
         if str(key_type).startswith("typing.Union[") and str(key_type).endswith("]"):
             description += "can be " " or ".join(
@@ -92,24 +93,28 @@ class BaseClass(BaseRequest):
         return cls.__name__.lower() + "s"
 
     @classmethod
-    def list_all(cls):
+    def list_all(cls) -> list:
         return db.list_all(cls)
 
     @classmethod
     def get(cls, id):
         return db.get(cls, id)
 
+    @classmethod
+    def get_by_field(cls, field: str, value: Any):
+        return db.get_by_field(cls, field, value)
+
     def save(self):
         self.updated_at = datetime.now()
         return db.update(self)
 
-    def delete(self):
+    def delete(self) -> bool:
         return db.delete(self)
 
     def create(self):
         return db.create(self)
 
-    def json(self):
+    def json(self) -> dict:
         dump = self.model_dump()
         for key, value in dump.items():
             if isinstance(value, datetime):

@@ -1,4 +1,3 @@
-
 from models.mixins import BaseClass, BaseRequest
 from typing import Annotated
 from pydantic import Field

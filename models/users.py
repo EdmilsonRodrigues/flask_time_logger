@@ -37,22 +37,26 @@ class UserRequest(BaseRequest):
 
 
 class User(BaseClass, UserRequest):
-    def encrypt_password(self):
+    def encrypt_password(self) -> str:
         password = self.password + SECRET_KEY
         sha256_password = sha256(password.encode()).hexdigest()
         return sha256_password
 
-    def json(self):
+    def json(self) -> dict:
         dump = super().json()
         dump["password"] = self.encrypt_password()
         return dump
 
-    def validate_password(self, password):
+    @classmethod
+    def get_by_email(cls, email) -> "User":
+        return cls.get_by_field("email", email)
+
+    def validate_password(self, password: str) -> bool:
         return self.encrypt_password() == password
 
 
 class UserResponse(User):
-    def json(self):
+    def json(self) -> dict:
         dump = super().json()
         dump.pop("password")
         return dump
