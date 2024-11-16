@@ -17,21 +17,21 @@ class TimeLogRequest(BaseRequest):
             description="The ID of the project",
             database_field="project_id INTEGER",
         ),
-    ]
+    ] = None
     time_in: Annotated[
         datetime,
         Field(
             description="The time the user logged in",
             database_field="time_in TEXT NOT NULL",
         ),
-    ]
+    ] = datetime.now()
     time_out: Annotated[
         Optional[datetime],
         Field(
             description="The time the user logged out",
             database_field="time_out TEXT",
         ),
-    ]
+    ] = None
 
 
 class TimeLog(BaseClass, TimeLogRequest):

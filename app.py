@@ -32,6 +32,7 @@ api = Api(
     version=VERSION,
     doc="/docs",
     authorizations=authorizations,
+    # prefix="/api",
 )
 
 api.add_namespace(auth_ns)

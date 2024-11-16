@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from types import GenericAlias
 from typing import Annotated, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from flask_restx import fields
 from session import db
 
@@ -23,6 +23,7 @@ class BaseRequest(BaseModel):
                 key_type = key_type.__origin__
             data[key] = cls.__get_fields_from_key_type(key_type, description)
             # print(key, annotation.__args__, annotation.__metadata__)
+        print(model)
         return model
 
     @classmethod
@@ -34,6 +35,7 @@ class BaseRequest(BaseModel):
     @classmethod
     def __get_fields_from_key_type(cls, key_type, description: str) -> fields.Raw:
         required = True
+        print(key_type)
         if str(key_type).startswith("typing.Union[") and str(key_type).endswith("]"):
             description += "can be " " or ".join(
                 [str(arg) for arg in key_type.__args__]
@@ -56,6 +58,8 @@ class BaseRequest(BaseModel):
             return fields.Integer(required=required, description=description)
         elif key_type is str:
             return fields.String(required=required, description=description)
+        elif key_type is EmailStr:
+            return fields.String(required=required, description=description)
         elif key_type is float:
             return fields.Float(required=required, description=description)
         elif key_type is datetime:
@@ -64,6 +68,8 @@ class BaseRequest(BaseModel):
             return fields.String(required=required, description=description)
         elif issubclass(key_type, BaseRequest):
             return fields.Nested(key_type.model())
+        else:
+            return fields.Raw(required=required, description=description)
 
 
 class BaseClass(BaseRequest):

@@ -1,5 +1,5 @@
 from typing import Annotated, Optional
-from pydantic import Field
+from pydantic import EmailStr, Field
 from config import SECRET_KEY
 from models.mixins import BaseClass, BaseRequest
 from hashlib import sha256
@@ -11,7 +11,7 @@ class UserRequest(BaseRequest):
         Field(description="The name of the user", database_field="name TEXT NOT NULL"),
     ]
     email: Annotated[
-        str,
+        EmailStr,
         Field(
             description="The email of the user", database_field="email TEXT NOT NULL"
         ),
